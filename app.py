@@ -190,39 +190,40 @@ p, label, li {
     line-height: 1.7;
 }
 
-.model-card {
-    background: #101f32 !important;
-    border: 1px solid #304760 !important;
+/* Tamamilə tünd və təmiz model card dizaynı */
+.model-card-custom {
+    background: #101f32;
+    border: 1px solid #304760;
     border-radius: 12px;
-    padding: 15px;
+    padding: 16px;
     margin: 12px 0 18px 0;
 }
 
 .model-heading {
-    color: var(--cyan) !important;
-    font-size: 15px;
+    color: var(--cyan);
+    font-size: 14px;
     font-weight: 800;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
 }
 
 .model-label {
-    color: #c5d3e5 !important;
-    font-size: 11px;
+    color: #c5d3e5;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.8px;
-    margin-top: 13px;
-    margin-bottom: 5px;
+    margin-top: 10px;
+    margin-bottom: 3px;
 }
 
 .model-value {
-    color: #ffffff !important;
-    background: #0a1525 !important;
-    border: 1px solid #30445d !important;
-    border-radius: 7px;
-    padding: 9px 10px;
-    font-size: 13px;
+    color: #ffffff;
+    background: #0a1525;
+    border: 1px solid #30445d;
+    border-radius: 6px;
+    padding: 7px 9px;
+    font-size: 12px;
     font-weight: 600;
-    overflow-wrap: anywhere;
 }
 
 .scanner-box {
@@ -344,11 +345,9 @@ div[data-testid="stAlert"] {
     .block-container {
         padding: 1rem;
     }
-
     .hero {
         padding: 20px;
     }
-
     .hero-title {
         font-size: 30px;
     }
@@ -390,22 +389,17 @@ SUSPICIOUS_WORDS = {
 
 
 def extract_urls(text):
-    """Extract URLs without opening or visiting them."""
     found = URL_PATTERN.findall(text)
     cleaned = []
-
     for item in found:
         url = item.rstrip(".,!?;:)]}")
         if url and url not in cleaned:
             cleaned.append(url)
-
     return cleaned
 
 
 def inspect_url(raw_url):
-    """Check URL structure using local heuristics only."""
     url = raw_url
-
     if url.lower().startswith("www."):
         url = "http://" + url
 
@@ -415,10 +409,7 @@ def inspect_url(raw_url):
         reasons = []
 
         if not host:
-            return {
-                "suspicious": True,
-                "reasons": ["Domen adı düzgün müəyyən edilmədi."],
-            }
+            return {"suspicious": True, "reasons": ["Domen adı düzgün müəyyən edilmədi."]}
 
         try:
             ipaddress.ip_address(host)
@@ -445,30 +436,18 @@ def inspect_url(raw_url):
             reasons.append("URL standart olmayan portdan istifadə edir.")
 
         searchable = (host + " " + parsed.path + " " + parsed.query).lower()
-        matched_words = sorted(
-            word for word in SUSPICIOUS_WORDS if word in searchable
-        )
+        matched_words = sorted(word for word in SUSPICIOUS_WORDS if word in searchable)
 
         if len(matched_words) >= 2:
-            reasons.append(
-                "Giriş və ya hesab yoxlaması ilə bağlı sözlər var: "
-                + ", ".join(matched_words)
-                + "."
-            )
+            reasons.append("Giriş və ya hesab yoxlaması ilə bağlı sözlər var: " + ", ".join(matched_words) + ".")
 
         if parsed.scheme.lower() != "https":
             reasons.append("Link HTTPS istifadə etmir.")
 
-        return {
-            "suspicious": bool(reasons),
-            "reasons": reasons,
-        }
+        return {"suspicious": bool(reasons), "reasons": reasons}
 
     except (ValueError, TypeError):
-        return {
-            "suspicious": True,
-            "reasons": ["URL təhlil edilə bilmədi."],
-        }
+        return {"suspicious": True, "reasons": ["URL təhlil edilə bilmədi."]}
 
 
 # =========================================================
@@ -486,10 +465,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     if model_loaded:
-        st.markdown(
-            '<div class="status-pill">● MODEL LOADED</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown('<div class="status-pill">● MODEL LOADED</div>', unsafe_allow_html=True)
     else:
         st.error("Model yüklənmədi. Model faylını yoxla.")
 
@@ -506,24 +482,23 @@ with st.sidebar:
 
     st.markdown("---")
 
+    # Bütün MODEL INTELLIGENCE blokunu tək bir təmiz HTML div içində yazırıq ki, ağ zona yaranmasın
     st.markdown("""
-    <div class="model-card">
+    <div class="model-card-custom">
         <div class="model-heading">🧠 MODEL INTELLIGENCE</div>
-
+        
         <div class="model-label">ALGORITHM</div>
         <div class="model-value">Logistic Regression</div>
-
+        
         <div class="model-label">TEXT VECTORIZATION</div>
         <div class="model-value">TF-IDF</div>
-
+        
         <div class="model-label">TEST ACCURACY</div>
-        <div class="model-value">98.39%</div>
+        <div class="model-value" style="color: #55e6a5; font-size: 14px; font-weight: 800;">98.39%</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.caption(
-        "Tədris layihəsidir. Model nəticələri təhlükəsizlik zəmanəti deyil."
-    )
+    st.caption("Tədris layihəsidir. Model nəticələri təhlükəsizlik zəmanəti deyil.")
 
 
 # =========================================================
@@ -543,16 +518,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Feature cards
 f1, f2, f3 = st.columns(3)
 
 with f1:
     st.markdown("""
     <div class="info-card">
         <div class="info-card-title">🧠 AI Text Analysis</div>
-        <div class="info-card-text">
-            Machine learning vasitəsilə email mətninin təsnifatı.
-        </div>
+        <div class="info-card-text">Machine learning vasitəsilə email mətninin təsnifatı.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -560,9 +532,7 @@ with f2:
     st.markdown("""
     <div class="info-card">
         <div class="info-card-title">🔗 URL Inspection</div>
-        <div class="info-card-text">
-            Linklərin strukturunda potensial risk əlamətlərinin axtarışı.
-        </div>
+        <div class="info-card-text">Linklərin strukturunda potensial risk əlamətlərinin axtarışı.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -570,9 +540,7 @@ with f3:
     st.markdown("""
     <div class="info-card">
         <div class="info-card-title">🛡️ Risk Awareness</div>
-        <div class="info-card-text">
-            Təhlükəsizlik xəbərdarlıqları və qorunma tövsiyələri.
-        </div>
+        <div class="info-card-text">Təhlükəsizlik xəbərdarlıqları və qorunma tövsiyələri.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -581,30 +549,19 @@ with f3:
 # EMAIL SCANNER
 # =========================================================
 st.markdown("")
-st.markdown('<div class="section-label">THREAT ANALYSIS MODULE</div>',
-            unsafe_allow_html=True)
+st.markdown('<div class="section-label">THREAT ANALYSIS MODULE</div>', unsafe_allow_html=True)
 st.markdown("## 📩 Email Security Scanner")
-st.write(
-    "Email mətnini aşağıya əlavə et. Sistem mətni və içindəki "
-    "linkləri ayrı-ayrılıqda analiz edəcək."
-)
+st.write("Email mətnini aşağıya əlavə et. Sistem mətni və içindəki linkləri ayrı-ayrılıqda analiz edəcək.")
 
 email_text = st.text_area(
     "Email məzmunu",
     height=210,
-    placeholder=(
-        "Dear user, your account will be suspended. "
-        "Click https://example.com to verify your password..."
-    ),
+    placeholder="Dear user, your account will be suspended. Click https://example.com to verify your password...",
     label_visibility="collapsed",
     key="email_input",
 )
 
-scan = st.button(
-    "🔍  ANALYZE EMAIL",
-    type="primary",
-    use_container_width=True,
-)
+scan = st.button("🔍  ANALYZE EMAIL", type="primary", use_container_width=True)
 
 
 # =========================================================
@@ -613,60 +570,32 @@ scan = st.button(
 if scan:
     if not email_text.strip():
         st.warning("Zəhmət olmasa, analiz üçün email mətnini daxil et.")
-
     elif not model_loaded:
-        st.error(
-            "Model yüklənməyib. "
-            "'phishing_model.joblib' faylının mövcudluğunu yoxla."
-        )
-
+        st.error("Model yüklənməyib. 'phishing_model.joblib' faylının mövcudluğunu yoxla.")
     else:
         email_vector = tfidf.transform([email_text])
         classes = list(model.classes_)
         phishing_index = classes.index(1)
-        probability = float(
-            model.predict_proba(email_vector)[0][phishing_index]
-        )
+        probability = float(model.predict_proba(email_vector)[0][phishing_index])
 
         urls = extract_urls(email_text)
-        url_results = [
-            {"url": url, **inspect_url(url)}
-            for url in urls
-        ]
+        url_results = [{"url": url, **inspect_url(url)} for url in urls]
+        suspicious_urls = [item for item in url_results if item["suspicious"]]
 
-        suspicious_urls = [
-            item for item in url_results if item["suspicious"]
-        ]
-
-        high_risk = (
-            probability >= threshold
-            or len(suspicious_urls) > 0
-        )
+        high_risk = probability >= threshold or len(suspicious_urls) > 0
 
         st.markdown("---")
-        st.markdown('<div class="section-label">SCAN RESULTS</div>',
-                    unsafe_allow_html=True)
+        st.markdown('<div class="section-label">SCAN RESULTS</div>', unsafe_allow_html=True)
         st.markdown("## 📊 Analysis Report")
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.metric(
-                "Model phishing score",
-                f"{probability:.1%}",
-            )
-
+            st.metric("Model phishing score", f"{probability:.1%}")
         with col2:
-            st.metric(
-                "Links found",
-                len(urls),
-            )
-
+            st.metric("Links found", len(urls))
         with col3:
-            st.metric(
-                "Suspicious links",
-                len(suspicious_urls),
-            )
+            st.metric("Suspicious links", len(suspicious_urls))
 
         st.progress(probability)
 
@@ -675,91 +604,41 @@ if scan:
             <div class="result-box result-danger">
                 <div class="result-title">🚨 Potential Threat Detected</div>
                 <div class="result-text">
-                    Email model tərəfindən phishing kimi qiymətləndirilib
-                    və ya ən azı bir linkdə şübhəli struktur əlaməti tapılıb.
-                    Linki açmazdan əvvəl göndərəni ayrıca yoxla.
+                    Email model tərəfindən phishing kimi qiymətləndirilib və ya ən azı bir linkdə şübhəli struktur əlaməti tapılıb.
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
-            st.markdown("### 🛡️ Recommended actions")
-            st.markdown("""
-            - Şübhəli linkə klikləmə.
-            - Link açıq olsa belə, parol və digər məxfi məlumatları daxil etmə.
-            - Göndərəni əvvəlcədən məlum olan rəsmi əlaqə kanalı ilə yoxla.
-            - Hesabın təhlükədə olduğu deyilirsə, saytı özün ayrıca açaraq yoxla.
-            """)
-
         else:
             st.markdown("""
             <div class="result-box result-safe">
                 <div class="result-title">✓ No Immediate Warning</div>
                 <div class="result-text">
-                    Modelin seçilmiş həddinə görə phishing xəbərdarlığı yaranmadı
-                    və URL yoxlamasında məlum struktur əlamətləri tapılmadı.
-                    Bu, email-in təhlükəsiz olduğunu sübut etmir.
+                    Modelin seçilmiş həddinə görə phishing xəbərdarlığı yaranmadı.
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-        # URL report
         st.markdown("### 🔗 Link inspection")
-
         if not urls:
-            st.info(
-                "Email mətnində tanınan HTTP/HTTPS və ya www linki tapılmadı."
-            )
+            st.info("Email mətnində tanınan link tapılmadı.")
         else:
             for item in url_results:
                 if item["suspicious"]:
-                    st.markdown(
-                        f"""
-                        <div class="url-card">
-                            <div class="url-address">⚠️ {item["url"]}</div>
-                            <div class="url-note">
-                                Status: Şübhəli əlamətlər aşkarlandı
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
+                    st.markdown(f"""
+                    <div class="url-card">
+                        <div class="url-address">⚠️ {item["url"]}</div>
+                        <div class="url-note">Status: Şübhəli əlamətlər aşkarlandı</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                     for reason in item["reasons"]:
                         st.markdown(f"- {reason}")
-
                 else:
-                    st.markdown(
-                        f"""
-                        <div class="url-card">
-                            <div class="url-address">✓ {item["url"]}</div>
-                            <div class="url-note">
-                                Status: Bu yoxlamada məlum şübhəli struktur
-                                əlaməti tapılmadı.
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-        with st.expander("🔬 How was the decision made?"):
-            st.write(
-                f"**Model phishing score:** {probability:.2%}"
-            )
-            st.write(
-                f"**Configured threshold:** {threshold:.0%}"
-            )
-            st.write(
-                f"**Extracted links:** {len(urls)}"
-            )
-            st.write(
-                f"**Links with heuristic warnings:** {len(suspicious_urls)}"
-            )
-            st.caption(
-                "URL yoxlaması lokal qaydalara əsaslanır. Linklər açılmır, "
-                "saytların reputasiyası və real vaxt təhlükəsizliyi yoxlanmır. "
-                "Bu analiz bütün phishing hücumlarını müəyyən edə bilməz."
-            )
-
+                    st.markdown(f"""
+                    <div class="url-card">
+                        <div class="url-address">✓ {item["url"]}</div>
+                        <div class="url-note">Status: Şübhəli struktur tapılmadı</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 # =========================================================
 # FOOTER
@@ -767,7 +646,6 @@ if scan:
 st.markdown("""
 <div class="footer">
     🛡️ PHISHGUARD AI<br><br>
-    Machine Learning • URL Heuristics • Cybersecurity Awareness<br><br>
-    Educational prototype — not a replacement for a security gateway
+    Machine Learning • URL Heuristics • Cybersecurity Awareness
 </div>
 """, unsafe_allow_html=True)
