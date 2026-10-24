@@ -1,6 +1,7 @@
-
 import streamlit as st
 import joblib
+
+from link_analyzer import analyze_email, combined_probability, render_report
 
 st.set_page_config(
     page_title="PhishGuard AI | Email Security",
@@ -273,7 +274,8 @@ with st.sidebar:
     st.markdown("### 🤖 Model məlumatları")
     st.markdown("**Alqoritm:** Logistic Regression")
     st.markdown("**Mətn analizi:** TF-IDF")
-    st.markdown("**Test accuracy:** 98.39%")
+    st.markdown("**Test accuracy:** 98.39% (mətn modeli)")
+    st.markdown("**Əlavə yoxlama:** link, domen, qoşma")
 
     st.caption(
         "Tədris məqsədli prototip. "
@@ -300,6 +302,8 @@ st.markdown("""
     <div class="panel-title">📩 Email Security Scanner</div>
     <div class="panel-sub">
         Şübhəli e-poçtun mətnini aşağıya daxil et və analizə başla.
+        Göndərəni yoxlamaq üçün mətnin əvvəlinə
+        <b>From: Ad &lt;ünvan@domen.com&gt;</b> sətrini əlavə edə bilərsən.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -326,25 +330,35 @@ if scan:
     if not email_text.strip():
         st.warning("Zəhmət olmasa, əvvəlcə email mətnini daxil et.")
     else:
+        # 1) Mətn modeli
         email_vector = tfidf.transform([email_text])
         class_index = list(model.classes_).index(1)
-        probability = model.predict_proba(email_vector)[0][class_index]
+        text_probability = float(model.predict_proba(email_vector)[0][class_index])
+
+        # 2) Link, domen və qoşma yoxlaması
+        report = analyze_email(email_text)
+
+        # 3) Birləşdirilmiş nəticə
+        probability = float(combined_probability(text_probability, report))
 
         st.markdown("---")
         st.markdown("## 📊 Analysis report")
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.metric("Phishing ehtimalı", f"{probability:.2%}")
+            st.metric("Mətn modeli ehtimalı", f"{text_probability:.2%}")
 
         with col2:
+            st.metric("Ümumi phishing ehtimalı", f"{probability:.2%}")
+
+        with col3:
             if probability >= threshold:
                 st.metric("Risk statusu", "YÜKSƏK RİSK")
             else:
                 st.metric("Risk statusu", "AŞAĞI RİSK")
 
-        st.progress(float(probability))
+        st.progress(probability)
 
         if probability >= threshold:
             st.error(
@@ -367,20 +381,31 @@ if scan:
                 "sübut etmir."
             )
 
+        # 4) Ətraflı link / domen / qoşma hesabatı
+        st.markdown("---")
+        render_report(st, report)
+
         with st.expander("🔬 Model qərarını necə verdi?"):
             st.write(
                 "1. Email mətni TF-IDF vasitəsilə rəqəmsal "
                 "xüsusiyyətlərə çevrildi."
             )
             st.write(
-                "2. Logistic Regression modeli phishing "
+                "2. Logistic Regression modeli mətn üzrə phishing "
                 "ehtimalını hesabladı."
             )
             st.write(
-                f"3. Nəticə {threshold:.0%} qərar həddi ilə müqayisə edildi."
+                "3. Mətndəki linklər, göndərən domeni və qoşma adları "
+                "ayrıca qaydalarla yoxlanıldı və risk balı hesablandı."
+            )
+            st.write(
+                "4. İki nəticə birləşdirilib ümumi ehtimal əldə edildi."
+            )
+            st.write(
+                f"5. Ümumi ehtimal {threshold:.0%} qərar həddi ilə müqayisə edildi."
             )
             st.caption(
-                "Göstərilən ehtimal modelin hesablamasıdır; "
+                "Göstərilən ehtimal modelin və qaydaların hesablamasıdır; "
                 "təhlükənin dəqiq ölçüsü və ya zəmanəti deyil."
             )
 
@@ -388,7 +413,7 @@ if scan:
 st.markdown("---")
 st.markdown("## ✨ Platform features")
 
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 
 with c1:
     st.markdown("### 🧠")
@@ -396,11 +421,16 @@ with c1:
     st.caption("E-poçt mətninin avtomatik təsnifatı.")
 
 with c2:
+    st.markdown("### 🔗")
+    st.markdown("**Link & Domain Check**")
+    st.caption("Link, göndərən domeni və qoşmaların yoxlanması.")
+
+with c3:
     st.markdown("### ⚡")
     st.markdown("**Fast Detection**")
     st.caption("Daxil edilən mətnin sürətli analizi.")
 
-with c3:
+with c4:
     st.markdown("### 🎚️")
     st.markdown("**Adjustable Threshold**")
     st.caption("Xəbərdarlıq həddini ehtiyaca görə dəyişmək.")
