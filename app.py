@@ -1,473 +1,262 @@
-import re
-import ipaddress
-from urllib.parse import urlparse
 
-import joblib
 import streamlit as st
+import joblib
 
-
-# =========================================================
-# PAGE CONFIGURATION
-# =========================================================
 st.set_page_config(
-    page_title="PhishGuard AI | Cybersecurity",
+    page_title="PhishGuard AI | Email Security",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded"
 )
 
-# =========================================================
-# MODEL LOADING
-# =========================================================
 @st.cache_resource
 def load_model():
     data = joblib.load("phishing_model.joblib")
     return data["model"], data["tfidf"]
 
+model, tfidf = load_model()
 
-try:
-    model, tfidf = load_model()
-    model_loaded = True
-except Exception:
-    model = None
-    tfidf = None
-    model_loaded = False
-
-
-# =========================================================
-# CYBERSECURITY DESIGN
-# =========================================================
+# ---------- DESIGN ----------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --background: #08111f;
-    --surface: #101d30;
-    --surface-light: #14253b;
-    --border: #2a405a;
-    --cyan: #55dcff;
-    --green: #55e6a5;
-    --white: #f4f7fc;
-    --muted: #b5c3d6;
+    --bg: #080D1B;
+    --panel: #111A2E;
+    --border: #263653;
+    --cyan: #45E5FF;
+    --purple: #9B7BFF;
+    --text: #F0F5FF;
+    --muted: #9AABC5;
 }
 
 .stApp {
-    background: var(--background);
-    color: var(--white);
+    background:
+        radial-gradient(ellipse at 10% 0%, #16264A 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 20%, #251747 0%, transparent 35%),
+        #080D1B;
+    color: var(--text);
     font-family: 'Inter', sans-serif;
 }
 
 .block-container {
-    max-width: 1180px;
+    max-width: 1200px;
     padding-top: 2rem;
     padding-bottom: 3rem;
 }
 
 [data-testid="stSidebar"] {
-    background: #0c1728 !important;
-    border-right: 1px solid var(--border);
+    background: #0C1426;
+    border-right: 1px solid #263653;
 }
 
 [data-testid="stSidebar"] * {
-    color: var(--white);
-}
-
-h1, h2, h3 {
-    color: var(--white) !important;
-    letter-spacing: -0.4px;
-}
-
-p, label, li {
-    color: var(--muted);
-    line-height: 1.75;
+    color: #E4EDFF;
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 13px;
-    padding: 8px 0 22px 0;
+    gap: 14px;
+    margin-bottom: 25px;
 }
 
 .brand-icon {
+    background: linear-gradient(135deg, #167DE8, #8455F7);
+    border-radius: 15px;
+    width: 54px;
+    height: 54px;
     display: flex;
-    align-items: center;
     justify-content: center;
-    width: 49px;
-    height: 49px;
-    flex-shrink: 0;
-    border-radius: 13px;
-    background: #153750;
-    border: 1px solid #34718b;
-    font-size: 25px;
+    align-items: center;
+    font-size: 29px;
+    box-shadow: 0 0 28px #247CE744;
 }
 
 .brand-name {
-    color: #ffffff;
-    font-size: 23px;
+    font-size: 27px;
     font-weight: 800;
+    letter-spacing: -1px;
+    color: #FFFFFF;
 }
 
-.brand-caption {
-    color: var(--cyan);
+.brand-sub {
+    color: #91A6C8;
     font-size: 10px;
     letter-spacing: 2px;
-    margin-top: 3px;
 }
 
-.status-pill {
-    background: #12332f;
-    border: 1px solid #286957;
-    color: #8cf2c6;
-    border-radius: 7px;
-    padding: 9px 11px;
+.status {
+    display: inline-block;
+    border: 1px solid #245B56;
+    background: #102B30;
+    color: #6DF3C5;
+    padding: 7px 13px;
+    border-radius: 30px;
     font-size: 12px;
-    margin: 8px 0 20px 0;
+    margin-bottom: 22px;
 }
 
 .hero {
-    background: linear-gradient(115deg, #11243a, #10192c 72%);
-    border: 1px solid #2b435e;
-    border-left: 4px solid var(--cyan);
-    border-radius: 16px;
-    padding: 30px;
-    margin: 15px 0 25px 0;
+    padding: 30px 0 24px 0;
 }
 
 .eyebrow {
-    color: var(--cyan);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 2.4px;
-}
-
-.hero-title {
-    font-size: clamp(31px, 4vw, 46px);
-    font-weight: 800;
-    line-height: 1.2;
-    margin: 13px 0;
-    color: #ffffff;
-}
-
-.hero-accent {
-    color: var(--cyan);
-}
-
-.hero-description {
-    max-width: 700px;
-    color: #c5d2e3;
-    font-size: 15px;
-    line-height: 1.8;
-}
-
-.section-label {
-    color: var(--cyan);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 1.8px;
-    margin-bottom: 8px;
-}
-
-.info-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 17px;
-    height: 100%;
-}
-
-.info-card-title {
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 7px;
-}
-
-.info-card-text {
-    color: #c1cfe0;
-    font-size: 13px;
-    line-height: 1.7;
-}
-
-/* Tamamilə tünd və təmiz model card dizaynı */
-.model-card-custom {
-    background: #101f32;
-    border: 1px solid #304760;
-    border-radius: 12px;
-    padding: 16px;
-    margin: 12px 0 18px 0;
-}
-
-.model-heading {
-    color: var(--cyan);
-    font-size: 14px;
-    font-weight: 800;
-    margin-bottom: 12px;
-    letter-spacing: 0.5px;
-}
-
-.model-label {
-    color: #c5d3e5;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    margin-top: 10px;
-    margin-bottom: 3px;
-}
-
-.model-value {
-    color: #ffffff;
-    background: #0a1525;
-    border: 1px solid #30445d;
-    border-radius: 6px;
-    padding: 7px 9px;
+    color: #54DFFF;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 
-.scanner-box {
-    background: #101d30;
-    border: 1px solid #2a405a;
-    border-radius: 14px;
-    padding: 22px;
-    margin-bottom: 12px;
+.hero h1 {
+    color: #F4F7FF;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.13;
+    margin: 14px 0;
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #48E4FF, #A58BFF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    color: #A7B7D0;
+    font-size: 16px;
+    line-height: 1.8;
+    max-width: 680px;
+}
+
+.panel {
+    background: linear-gradient(145deg, #131F35, #10182A);
+    border: 1px solid #2A3C5A;
+    border-radius: 22px;
+    padding: 26px;
+    margin: 10px 0 22px 0;
+    box-shadow: 0 15px 45px #00000020;
+}
+
+.panel-title {
+    font-size: 21px;
+    font-weight: 700;
+    color: #F3F6FF;
+}
+
+.panel-sub {
+    font-size: 13px;
+    color: #9AABC5;
+    margin-top: 5px;
+    margin-bottom: 20px;
 }
 
 div[data-testid="stTextArea"] textarea {
-    background: #0a1525 !important;
-    color: #ffffff !important;
-    border: 1px solid #3a526d !important;
-    border-radius: 10px !important;
-    font-size: 14px !important;
+    background: #0A1222 !important;
+    color: #EAF2FF !important;
+    border: 1px solid #344967 !important;
+    border-radius: 13px !important;
     line-height: 1.7 !important;
 }
 
-div[data-testid="stTextArea"] textarea::placeholder {
-    color: #9fb0c6 !important;
-    opacity: 1 !important;
+div[data-testid="stTextArea"] textarea:focus {
+    border-color: #4BCEFF !important;
+    box-shadow: 0 0 0 1px #4BCEFF44 !important;
 }
 
 .stButton > button {
-    background: #087fa8 !important;
-    color: #ffffff !important;
-    border: 1px solid #39c5e8 !important;
-    border-radius: 9px !important;
-    min-height: 48px;
-    font-weight: 800 !important;
+    background: linear-gradient(100deg, #087FE8, #7956F5) !important;
+    color: white !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    min-height: 49px;
+    font-weight: 700 !important;
+    transition: 0.2s ease;
 }
 
 .stButton > button:hover {
-    background: #096a8d !important;
-    border-color: #83eaff !important;
+    box-shadow: 0 0 24px #6B63FF55;
+    transform: translateY(-1px);
 }
 
 div[data-testid="stMetric"] {
-    background: #101e31;
-    border: 1px solid #304760;
-    border-radius: 12px;
-    padding: 17px;
+    background: #111D31;
+    border: 1px solid #2A3C5A;
+    padding: 18px;
+    border-radius: 16px;
 }
 
 div[data-testid="stMetricLabel"] {
-    color: #c4d2e4 !important;
+    color: #A7B7D0 !important;
 }
 
 div[data-testid="stMetricValue"] {
-    color: var(--cyan) !important;
+    color: #53E2FF !important;
+}
+
+div[data-testid="stProgress"] > div {
+    background: #25344D;
+    border-radius: 20px;
+}
+
+div[data-testid="stProgress"] div[role="progressbar"] {
+    background: linear-gradient(90deg, #15C8E8, #9868FF);
 }
 
 div[data-testid="stAlert"] {
-    border-radius: 10px;
+    border-radius: 13px;
 }
 
-.result-box {
-    background: #101e31;
-    border: 1px solid #304760;
-    border-radius: 12px;
-    padding: 20px;
-    margin: 12px 0;
+h2, h3 {
+    color: #F1F5FF !important;
 }
 
-.result-safe {
-    border-left: 4px solid #55e6a5;
-}
-
-.result-danger {
-    border-left: 4px solid #ff6577;
-}
-
-.result-title {
-    color: #ffffff;
-    font-size: 19px;
-    font-weight: 800;
-    margin-bottom: 9px;
-}
-
-.result-text {
-    color: #c6d3e4;
-    font-size: 14px;
-    line-height: 1.8;
-}
-
-.url-card {
-    background: #0c192a;
-    border: 1px solid #304760;
-    border-radius: 9px;
-    padding: 13px;
-    margin: 9px 0;
-    overflow-wrap: anywhere;
-}
-
-.url-address {
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 600;
-    overflow-wrap: anywhere;
-}
-
-.url-note {
-    color: #c2d0e1;
-    font-size: 12px;
-    margin-top: 7px;
+hr {
+    border-color: #263653 !important;
 }
 
 .footer {
-    border-top: 1px solid #2a405a;
-    margin-top: 35px;
-    padding: 22px 0;
     text-align: center;
-    color: #aebdd0;
+    color: #7789A5;
     font-size: 12px;
+    padding: 22px 0;
+    border-top: 1px solid #263653;
+    margin-top: 30px;
+}
+
+div[data-testid="stCaptionContainer"] {
+    color: #94A7C4;
 }
 
 @media (max-width: 700px) {
     .block-container {
         padding: 1rem;
     }
-    .hero {
-        padding: 20px;
+    .panel {
+        padding: 17px;
     }
-    .hero-title {
-        font-size: 30px;
+    .hero h1 {
+        letter-spacing: -1px;
     }
 }
 </style>
 """, unsafe_allow_html=True)
 
-
-# =========================================================
-# URL EXTRACTION AND HEURISTIC ANALYSIS
-# =========================================================
-URL_PATTERN = re.compile(
-    r"""(?i)\b(?:(?:https?://)|(?:www\.))[^\s<>"']+"""
-)
-
-SHORTENER_DOMAINS = {
-    "bit.ly",
-    "tinyurl.com",
-    "t.co",
-    "is.gd",
-    "cutt.ly",
-    "rb.gy",
-    "ow.ly",
-    "buff.ly",
-}
-
-SUSPICIOUS_WORDS = {
-    "login",
-    "verify",
-    "password",
-    "secure",
-    "account",
-    "update",
-    "wallet",
-    "signin",
-    "confirm",
-    "suspended",
-}
-
-
-def extract_urls(text):
-    found = URL_PATTERN.findall(text)
-    cleaned = []
-    for item in found:
-        url = item.rstrip(".,!?;:)]}")
-        if url and url not in cleaned:
-            cleaned.append(url)
-    return cleaned
-
-
-def inspect_url(raw_url):
-    url = raw_url
-    if url.lower().startswith("www."):
-        url = "http://" + url
-
-    try:
-        parsed = urlparse(url)
-        host = (parsed.hostname or "").lower().rstrip(".")
-        reasons = []
-
-        if not host:
-            return {"suspicious": True, "reasons": ["Domen adı düzgün müəyyən edilmədi."]}
-
-        try:
-            ipaddress.ip_address(host)
-            reasons.append("Domen əvəzinə birbaşa IP ünvanı istifadə olunur.")
-        except ValueError:
-            pass
-
-        if "@" in parsed.netloc:
-            reasons.append("URL daxilində istifadəçini çaşdıra bilən '@' işarəsi var.")
-
-        if host.startswith("xn--") or ".xn--" in host:
-            reasons.append("Domen Punycode formatından istifadə edir.")
-
-        if host in SHORTENER_DOMAINS:
-            reasons.append("Link qısaldıcı xidmətə aiddir; son ünvan gizli qala bilər.")
-
-        if len(host) > 55:
-            reasons.append("Domen adı qeyri-adi dərəcədə uzundur.")
-
-        if host.count(".") >= 4:
-            reasons.append("Domen çoxsaylı alt domenlərdən ibarətdir.")
-
-        if parsed.port is not None and parsed.port not in (80, 443):
-            reasons.append("URL standart olmayan portdan istifadə edir.")
-
-        searchable = (host + " " + parsed.path + " " + parsed.query).lower()
-        matched_words = sorted(word for word in SUSPICIOUS_WORDS if word in searchable)
-
-        if len(matched_words) >= 2:
-            reasons.append("Giriş və ya hesab yoxlaması ilə bağlı sözlər var: " + ", ".join(matched_words) + ".")
-
-        if parsed.scheme.lower() != "https":
-            reasons.append("Link HTTPS istifadə etmir.")
-
-        return {"suspicious": bool(reasons), "reasons": reasons}
-
-    except (ValueError, TypeError):
-        return {"suspicious": True, "reasons": ["URL təhlil edilə bilmədi."]}
-
-
-# =========================================================
-# SIDEBAR
-# =========================================================
+# ---------- SIDEBAR ----------
 with st.sidebar:
     st.markdown("""
     <div class="brand">
         <div class="brand-icon">🛡️</div>
         <div>
             <div class="brand-name">PhishGuard AI</div>
-            <div class="brand-caption">EMAIL SECURITY SYSTEM</div>
+            <div class="brand-sub">EMAIL SECURITY</div>
         </div>
     </div>
+    <div class="status">● &nbsp; AI MODEL LOADED</div>
     """, unsafe_allow_html=True)
-
-    if model_loaded:
-        st.markdown('<div class="status-pill">● MODEL LOADED</div>', unsafe_allow_html=True)
-    else:
-        st.error("Model yüklənmədi. Model faylını yoxla.")
 
     st.markdown("### ⚙️ Analysis settings")
 
@@ -477,175 +266,148 @@ with st.sidebar:
         max_value=0.90,
         value=0.35,
         step=0.05,
-        help="Aşağı hədd daha çox email-i şübhəli işarələyə bilər.",
+        help="Hədd aşağı olduqda daha çox email phishing kimi işarələnə bilər."
     )
 
     st.markdown("---")
+    st.markdown("### 🤖 Model məlumatları")
+    st.markdown("**Alqoritm:** Logistic Regression")
+    st.markdown("**Mətn analizi:** TF-IDF")
+    st.markdown("**Test accuracy:** 98.39%")
 
-    # Bütün MODEL INTELLIGENCE blokunu tək bir təmiz HTML div içində yazırıq ki, ağ zona yaranmasın
-    st.markdown("""
-    <div class="model-card-custom">
-        <div class="model-heading">🧠 MODEL INTELLIGENCE</div>
-        
-        <div class="model-label">ALGORITHM</div>
-        <div class="model-value">Logistic Regression</div>
-        
-        <div class="model-label">TEXT VECTORIZATION</div>
-        <div class="model-value">TF-IDF</div>
-        
-        <div class="model-label">TEST ACCURACY</div>
-        <div class="model-value" style="color: #55e6a5; font-size: 14px; font-weight: 800;">98.39%</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.caption(
+        "Tədris məqsədli prototip. "
+        "Real təhlükəsizlik zəmanəti vermir."
+    )
 
-    st.caption("Tədris layihəsidir. Model nəticələri təhlükəsizlik zəmanəti deyil.")
-
-
-# =========================================================
-# HERO
-# =========================================================
+# ---------- HERO ----------
 st.markdown("""
 <div class="hero">
-    <div class="eyebrow">CYBER DEFENSE • EMAIL PROTECTION</div>
-    <div class="hero-title">
-        Protect your inbox.<br>
-        <span class="hero-accent">Detect phishing.</span>
-    </div>
-    <div class="hero-description">
-        E-poçt mətnini analiz et, linklərdəki şübhəli əlamətləri yoxla
-        və potensial phishing hücumlarına qarşı daha məlumatlı qərar ver.
+    <div class="eyebrow">NEXT-GENERATION EMAIL PROTECTION</div>
+    <h1>Stay one step ahead of<br>
+    <span class="gradient-text">phishing attacks.</span></h1>
+    <p>
+        E-poçt mətnini süni intellekt əsaslı model ilə analiz et,
+        potensial phishing təhlükələrini müəyyənləşdir və
+        daha məlumatlı təhlükəsizlik qərarları ver.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# ---------- SCANNER ----------
+st.markdown("""
+<div class="panel">
+    <div class="panel-title">📩 Email Security Scanner</div>
+    <div class="panel-sub">
+        Şübhəli e-poçtun mətnini aşağıya daxil et və analizə başla.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-f1, f2, f3 = st.columns(3)
-
-with f1:
-    st.markdown("""
-    <div class="info-card">
-        <div class="info-card-title">🧠 AI Text Analysis</div>
-        <div class="info-card-text">Machine learning vasitəsilə email mətninin təsnifatı.</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with f2:
-    st.markdown("""
-    <div class="info-card">
-        <div class="info-card-title">🔗 URL Inspection</div>
-        <div class="info-card-text">Linklərin strukturunda potensial risk əlamətlərinin axtarışı.</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with f3:
-    st.markdown("""
-    <div class="info-card">
-        <div class="info-card-title">🛡️ Risk Awareness</div>
-        <div class="info-card-text">Təhlükəsizlik xəbərdarlıqları və qorunma tövsiyələri.</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-
-# =========================================================
-# EMAIL SCANNER
-# =========================================================
-st.markdown("")
-st.markdown('<div class="section-label">THREAT ANALYSIS MODULE</div>', unsafe_allow_html=True)
-st.markdown("## 📩 Email Security Scanner")
-st.write("Email mətnini aşağıya əlavə et. Sistem mətni və içindəki linkləri ayrı-ayrılıqda analiz edəcək.")
-
 email_text = st.text_area(
     "Email məzmunu",
-    height=210,
-    placeholder="Dear user, your account will be suspended. Click https://example.com to verify your password...",
-    label_visibility="collapsed",
-    key="email_input",
+    value="",
+    height=200,
+    placeholder=(
+        "Dear user, your account will be suspended. "
+        "Click here to verify your password immediately..."
+    ),
+    label_visibility="collapsed"
 )
 
-scan = st.button("🔍  ANALYZE EMAIL", type="primary", use_container_width=True)
+scan = st.button(
+    "🔍  ANALYZE EMAIL",
+    type="primary",
+    use_container_width=True
+)
 
-
-# =========================================================
-# ANALYSIS RESULTS
-# =========================================================
+# ---------- ANALYSIS ----------
 if scan:
     if not email_text.strip():
-        st.warning("Zəhmət olmasa, analiz üçün email mətnini daxil et.")
-    elif not model_loaded:
-        st.error("Model yüklənməyib. 'phishing_model.joblib' faylının mövcudluğunu yoxla.")
+        st.warning("Zəhmət olmasa, əvvəlcə email mətnini daxil et.")
     else:
         email_vector = tfidf.transform([email_text])
-        classes = list(model.classes_)
-        phishing_index = classes.index(1)
-        probability = float(model.predict_proba(email_vector)[0][phishing_index])
-
-        urls = extract_urls(email_text)
-        url_results = [{"url": url, **inspect_url(url)} for url in urls]
-        suspicious_urls = [item for item in url_results if item["suspicious"]]
-
-        high_risk = probability >= threshold or len(suspicious_urls) > 0
+        class_index = list(model.classes_).index(1)
+        probability = model.predict_proba(email_vector)[0][class_index]
 
         st.markdown("---")
-        st.markdown('<div class="section-label">SCAN RESULTS</div>', unsafe_allow_html=True)
-        st.markdown("## 📊 Analysis Report")
+        st.markdown("## 📊 Analysis report")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
 
         with col1:
-            st.metric("Model phishing score", f"{probability:.1%}")
+            st.metric("Phishing ehtimalı", f"{probability:.2%}")
+
         with col2:
-            st.metric("Links found", len(urls))
-        with col3:
-            st.metric("Suspicious links", len(suspicious_urls))
+            if probability >= threshold:
+                st.metric("Risk statusu", "YÜKSƏK RİSK")
+            else:
+                st.metric("Risk statusu", "AŞAĞI RİSK")
 
-        st.progress(probability)
+        st.progress(float(probability))
 
-        if high_risk:
+        if probability >= threshold:
+            st.error(
+                "🚨 Potensial phishing aşkarlandı! "
+                "Bu email-i şübhəli hesab et."
+            )
             st.markdown("""
-            <div class="result-box result-danger">
-                <div class="result-title">🚨 Potential Threat Detected</div>
-                <div class="result-text">
-                    Email model tərəfindən phishing kimi qiymətləndirilib və ya ən azı bir linkdə şübhəli struktur əlaməti tapılıb.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            **Təhlükəsizlik tövsiyələri**
+            - Şübhəli linklərə klikləmə.
+            - Şifrən və digər məxfi məlumatlarını daxil etmə.
+            - Göndərənin kimliyini ayrıca yoxla.
+            """)
         else:
-            st.markdown("""
-            <div class="result-box result-safe">
-                <div class="result-title">✓ No Immediate Warning</div>
-                <div class="result-text">
-                    Modelin seçilmiş həddinə görə phishing xəbərdarlığı yaranmadı.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.success(
+                "✅ Email seçilmiş həddə görə phishing kimi "
+                "işarələnmədi."
+            )
+            st.warning(
+                "Bu nəticə email-in tam təhlükəsiz olduğunu "
+                "sübut etmir."
+            )
 
-        st.markdown("### 🔗 Link inspection")
-        if not urls:
-            st.info("Email mətnində tanınan link tapılmadı.")
-        else:
-            for item in url_results:
-                if item["suspicious"]:
-                    st.markdown(f"""
-                    <div class="url-card">
-                        <div class="url-address">⚠️ {item["url"]}</div>
-                        <div class="url-note">Status: Şübhəli əlamətlər aşkarlandı</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    for reason in item["reasons"]:
-                        st.markdown(f"- {reason}")
-                else:
-                    st.markdown(f"""
-                    <div class="url-card">
-                        <div class="url-address">✓ {item["url"]}</div>
-                        <div class="url-note">Status: Şübhəli struktur tapılmadı</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+        with st.expander("🔬 Model qərarını necə verdi?"):
+            st.write(
+                "1. Email mətni TF-IDF vasitəsilə rəqəmsal "
+                "xüsusiyyətlərə çevrildi."
+            )
+            st.write(
+                "2. Logistic Regression modeli phishing "
+                "ehtimalını hesabladı."
+            )
+            st.write(
+                f"3. Nəticə {threshold:.0%} qərar həddi ilə müqayisə edildi."
+            )
+            st.caption(
+                "Göstərilən ehtimal modelin hesablamasıdır; "
+                "təhlükənin dəqiq ölçüsü və ya zəmanəti deyil."
+            )
 
-# =========================================================
-# FOOTER
-# =========================================================
+# ---------- FEATURE CARDS ----------
+st.markdown("---")
+st.markdown("## ✨ Platform features")
+
+c1, c2, c3 = st.columns(3)
+
+with c1:
+    st.markdown("### 🧠")
+    st.markdown("**AI Analysis**")
+    st.caption("E-poçt mətninin avtomatik təsnifatı.")
+
+with c2:
+    st.markdown("### ⚡")
+    st.markdown("**Fast Detection**")
+    st.caption("Daxil edilən mətnin sürətli analizi.")
+
+with c3:
+    st.markdown("### 🎚️")
+    st.markdown("**Adjustable Threshold**")
+    st.caption("Xəbərdarlıq həddini ehtiyaca görə dəyişmək.")
+
 st.markdown("""
 <div class="footer">
-    🛡️ PHISHGUARD AI<br><br>
-    Machine Learning • URL Heuristics • Cybersecurity Awareness
+    🛡️ PhishGuard AI · Educational Cybersecurity Project<br><br>
+    AI əsaslı phishing aşkarlama prototipi · Nəticələr zəmanət deyil
 </div>
 """, unsafe_allow_html=True)
