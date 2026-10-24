@@ -121,7 +121,7 @@ def _host_checks(host):
         ipaddress.ip_address(host)
         findings.append(_f("Yüksək", "Domen əvəzinə IP ünvanı",
                            "Real şirkətlər linklərdə nadir hallarda çılpaq IP istifadə edir."))
-        return findings, reg
+        return findings, host
     except ValueError:
         pass
 
