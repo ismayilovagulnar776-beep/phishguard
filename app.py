@@ -1,4 +1,3 @@
-
 import re
 import ipaddress
 from urllib.parse import urlparse
@@ -66,7 +65,7 @@ st.markdown("""
 }
 
 [data-testid="stSidebar"] {
-    background: #0c1728;
+    background: #0c1728 !important;
     border-right: 1px solid var(--border);
 }
 
@@ -192,22 +191,22 @@ p, label, li {
 }
 
 .model-card {
-    background: #101f32;
-    border: 1px solid #304760;
+    background: #101f32 !important;
+    border: 1px solid #304760 !important;
     border-radius: 12px;
     padding: 15px;
     margin: 12px 0 18px 0;
 }
 
 .model-heading {
-    color: var(--cyan);
+    color: var(--cyan) !important;
     font-size: 15px;
     font-weight: 800;
     margin-bottom: 15px;
 }
 
 .model-label {
-    color: #c5d3e5;
+    color: #c5d3e5 !important;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.8px;
@@ -216,9 +215,9 @@ p, label, li {
 }
 
 .model-value {
-    color: #ffffff;
-    background: #0a1525;
-    border: 1px solid #30445d;
+    color: #ffffff !important;
+    background: #0a1525 !important;
+    border: 1px solid #30445d !important;
     border-radius: 7px;
     padding: 9px 10px;
     font-size: 13px;
@@ -639,7 +638,6 @@ if scan:
             item for item in url_results if item["suspicious"]
         ]
 
-        # Overall warning considers both text prediction and URL heuristics.
         high_risk = (
             probability >= threshold
             or len(suspicious_urls) > 0
