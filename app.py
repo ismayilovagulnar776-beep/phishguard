@@ -3,7 +3,7 @@ import streamlit as st
 import joblib
 
 st.set_page_config(
-    page_title="PhishGuard AI | Email Security",
+    page_title="PhishGuard AI",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -16,194 +16,183 @@ def load_model():
 
 model, tfidf = load_model()
 
-# ---------- DESIGN ----------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-:root {
-    --bg: #080D1B;
-    --panel: #111A2E;
-    --border: #263653;
-    --cyan: #45E5FF;
-    --purple: #9B7BFF;
-    --text: #F0F5FF;
-    --muted: #9AABC5;
-}
-
 .stApp {
     background:
-        radial-gradient(ellipse at 10% 0%, #16264A 0%, transparent 40%),
-        radial-gradient(ellipse at 90% 20%, #251747 0%, transparent 35%),
-        #080D1B;
-    color: var(--text);
+        radial-gradient(ellipse at top left, #E1F2FF 0%, transparent 40%),
+        radial-gradient(ellipse at top right, #F0E9FF 0%, transparent 35%),
+        #F6F8FD;
+    color: #192A48;
     font-family: 'Inter', sans-serif;
 }
 
 .block-container {
-    max-width: 1200px;
+    max-width: 1180px;
     padding-top: 2rem;
     padding-bottom: 3rem;
 }
 
 [data-testid="stSidebar"] {
-    background: #0C1426;
-    border-right: 1px solid #263653;
+    background: #FFFFFF;
+    border-right: 1px solid #E1E8F3;
 }
 
 [data-testid="stSidebar"] * {
-    color: #E4EDFF;
+    color: #243756;
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 25px;
+    gap: 12px;
+    margin-bottom: 24px;
 }
 
 .brand-icon {
-    background: linear-gradient(135deg, #167DE8, #8455F7);
+    background: linear-gradient(135deg, #168BDE, #8660ED);
     border-radius: 15px;
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-size: 29px;
-    box-shadow: 0 0 28px #247CE744;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 7px 18px #6C80E533;
 }
 
 .brand-name {
-    font-size: 27px;
+    font-size: 24px;
     font-weight: 800;
     letter-spacing: -1px;
-    color: #FFFFFF;
+    color: #192A48;
 }
 
 .brand-sub {
-    color: #91A6C8;
+    color: #71829D;
     font-size: 10px;
     letter-spacing: 2px;
 }
 
 .status {
     display: inline-block;
-    border: 1px solid #245B56;
-    background: #102B30;
-    color: #6DF3C5;
-    padding: 7px 13px;
+    border: 1px solid #BCEBD8;
+    background: #EAFBF3;
+    color: #12815D;
+    padding: 8px 12px;
     border-radius: 30px;
     font-size: 12px;
     margin-bottom: 22px;
 }
 
 .hero {
-    padding: 30px 0 24px 0;
+    padding: 28px 0 25px;
 }
 
 .eyebrow {
-    color: #54DFFF;
+    color: #397DE0;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 3px;
-    text-transform: uppercase;
 }
 
 .hero h1 {
-    color: #F4F7FF;
-    font-size: clamp(32px, 4vw, 52px);
+    color: #192A48;
+    font-size: clamp(34px, 4vw, 53px);
     font-weight: 800;
     letter-spacing: -2px;
-    line-height: 1.13;
-    margin: 14px 0;
+    line-height: 1.16;
+    margin: 15px 0;
 }
 
 .gradient-text {
-    background: linear-gradient(90deg, #48E4FF, #A58BFF);
+    background: linear-gradient(90deg, #168BDE, #8256E8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .hero p {
-    color: #A7B7D0;
+    color: #64748B;
     font-size: 16px;
     line-height: 1.8;
-    max-width: 680px;
+    max-width: 720px;
 }
 
 .panel {
-    background: linear-gradient(145deg, #131F35, #10182A);
-    border: 1px solid #2A3C5A;
+    background: linear-gradient(135deg, #FFFFFF, #FAFBFF);
+    border: 1px solid #DCE6F5;
     border-radius: 22px;
-    padding: 26px;
-    margin: 10px 0 22px 0;
-    box-shadow: 0 15px 45px #00000020;
+    padding: 25px;
+    margin: 10px 0 20px;
+    box-shadow: 0 12px 35px #294A7610;
 }
 
 .panel-title {
-    font-size: 21px;
-    font-weight: 700;
-    color: #F3F6FF;
+    font-size: 22px;
+    font-weight: 800;
+    color: #192A48;
 }
 
 .panel-sub {
-    font-size: 13px;
-    color: #9AABC5;
-    margin-top: 5px;
-    margin-bottom: 20px;
+    font-size: 14px;
+    color: #71819A;
+    margin-top: 7px;
 }
 
 div[data-testid="stTextArea"] textarea {
-    background: #0A1222 !important;
-    color: #EAF2FF !important;
-    border: 1px solid #344967 !important;
-    border-radius: 13px !important;
+    background: #FFFFFF !important;
+    color: #192A48 !important;
+    border: 1px solid #D4DFEF !important;
+    border-radius: 14px !important;
     line-height: 1.7 !important;
 }
 
 div[data-testid="stTextArea"] textarea:focus {
-    border-color: #4BCEFF !important;
-    box-shadow: 0 0 0 1px #4BCEFF44 !important;
+    border-color: #438CEB !important;
+    box-shadow: 0 0 0 2px #438CEB22 !important;
 }
 
 .stButton > button {
-    background: linear-gradient(100deg, #087FE8, #7956F5) !important;
-    color: white !important;
-    border: 0 !important;
-    border-radius: 12px !important;
-    min-height: 49px;
+    background: linear-gradient(100deg, #168BDE, #7958E9) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 13px !important;
+    min-height: 50px;
     font-weight: 700 !important;
+    box-shadow: 0 7px 18px #627BE52B;
     transition: 0.2s ease;
 }
 
 .stButton > button:hover {
-    box-shadow: 0 0 24px #6B63FF55;
+    box-shadow: 0 10px 25px #627BE54A;
     transform: translateY(-1px);
 }
 
 div[data-testid="stMetric"] {
-    background: #111D31;
-    border: 1px solid #2A3C5A;
+    background: #FFFFFF;
+    border: 1px solid #DCE6F5;
     padding: 18px;
     border-radius: 16px;
+    box-shadow: 0 8px 24px #294A760B;
 }
 
 div[data-testid="stMetricLabel"] {
-    color: #A7B7D0 !important;
+    color: #71819A !important;
 }
 
 div[data-testid="stMetricValue"] {
-    color: #53E2FF !important;
+    color: #2869D7 !important;
 }
 
 div[data-testid="stProgress"] > div {
-    background: #25344D;
+    background: #E3EAF5;
     border-radius: 20px;
 }
 
 div[data-testid="stProgress"] div[role="progressbar"] {
-    background: linear-gradient(90deg, #15C8E8, #9868FF);
+    background: linear-gradient(90deg, #168BDE, #9561EF);
 }
 
 div[data-testid="stAlert"] {
@@ -211,24 +200,24 @@ div[data-testid="stAlert"] {
 }
 
 h2, h3 {
-    color: #F1F5FF !important;
+    color: #192A48 !important;
 }
 
 hr {
-    border-color: #263653 !important;
+    border-color: #DFE7F2 !important;
+}
+
+div[data-testid="stCaptionContainer"] {
+    color: #71819A;
 }
 
 .footer {
     text-align: center;
-    color: #7789A5;
+    color: #8290A5;
     font-size: 12px;
-    padding: 22px 0;
-    border-top: 1px solid #263653;
-    margin-top: 30px;
-}
-
-div[data-testid="stCaptionContainer"] {
-    color: #94A7C4;
+    padding: 24px 0;
+    border-top: 1px solid #DFE7F2;
+    margin-top: 32px;
 }
 
 @media (max-width: 700px) {
@@ -245,7 +234,7 @@ div[data-testid="stCaptionContainer"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- SIDEBAR ----------
+# SIDEBAR
 with st.sidebar:
     st.markdown("""
     <div class="brand">
@@ -255,51 +244,50 @@ with st.sidebar:
             <div class="brand-sub">EMAIL SECURITY</div>
         </div>
     </div>
-    <div class="status">● &nbsp; AI MODEL LOADED</div>
+    <div class="status">● &nbsp; AI MODEL READY</div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### ⚙️ Analysis settings")
+    st.markdown("### ⚙️ Analiz parametrləri")
 
     threshold = st.slider(
         "Phishing xəbərdarlıq həddi",
         min_value=0.10,
         max_value=0.90,
         value=0.35,
-        step=0.05,
-        help="Hədd aşağı olduqda daha çox email phishing kimi işarələnə bilər."
+        step=0.05
     )
 
     st.markdown("---")
     st.markdown("### 🤖 Model məlumatları")
-    st.markdown("**Alqoritm:** Logistic Regression")
-    st.markdown("**Mətn analizi:** TF-IDF")
-    st.markdown("**Test accuracy:** 98.39%")
+    st.write("**Alqoritm:** Logistic Regression")
+    st.write("**Mətn emalı:** TF-IDF")
+    st.write("**Test accuracy:** 98.39%")
 
-    st.caption(
-        "Tədris məqsədli prototip. "
-        "Real təhlükəsizlik zəmanəti vermir."
+    st.info(
+        "Hədd aşağı olduqda daha çox email phishing "
+        "kimi işarələnə bilər."
     )
 
-# ---------- HERO ----------
+# HERO
 st.markdown("""
 <div class="hero">
-    <div class="eyebrow">NEXT-GENERATION EMAIL PROTECTION</div>
+    <div class="eyebrow">AI-POWERED EMAIL SECURITY</div>
     <h1>Stay one step ahead of<br>
     <span class="gradient-text">phishing attacks.</span></h1>
     <p>
         E-poçt mətnini süni intellekt əsaslı model ilə analiz et,
         potensial phishing təhlükələrini müəyyənləşdir və
-        daha məlumatlı təhlükəsizlik qərarları ver.
+        onlayn təhlükəsizliyin üçün daha məlumatlı qərarlar ver.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-# ---------- SCANNER ----------
+# SCANNER PANEL
 st.markdown("""
 <div class="panel">
     <div class="panel-title">📩 Email Security Scanner</div>
     <div class="panel-sub">
-        Şübhəli e-poçtun mətnini aşağıya daxil et və analizə başla.
+        Şübhəli e-poçtun mətnini daxil et və təhlükə analizinə başla.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -316,12 +304,12 @@ email_text = st.text_area(
 )
 
 scan = st.button(
-    "🔍  ANALYZE EMAIL",
+    "🔍  EMAIL-I ANALİZ ET",
     type="primary",
     use_container_width=True
 )
 
-# ---------- ANALYSIS ----------
+# ANALYSIS
 if scan:
     if not email_text.strip():
         st.warning("Zəhmət olmasa, əvvəlcə email mətnini daxil et.")
@@ -331,7 +319,7 @@ if scan:
         probability = model.predict_proba(email_vector)[0][class_index]
 
         st.markdown("---")
-        st.markdown("## 📊 Analysis report")
+        st.markdown("## 📊 Analiz nəticəsi")
 
         col1, col2 = st.columns(2)
 
@@ -339,37 +327,36 @@ if scan:
             st.metric("Phishing ehtimalı", f"{probability:.2%}")
 
         with col2:
-            if probability >= threshold:
-                st.metric("Risk statusu", "YÜKSƏK RİSK")
-            else:
-                st.metric("Risk statusu", "AŞAĞI RİSK")
+            st.metric(
+                "Risk statusu",
+                "YÜKSƏK RİSK" if probability >= threshold
+                else "AŞAĞI RİSK"
+            )
 
         st.progress(float(probability))
 
         if probability >= threshold:
             st.error(
-                "🚨 Potensial phishing aşkarlandı! "
-                "Bu email-i şübhəli hesab et."
+                "🚨 Potensial phishing aşkarlandı!"
             )
             st.markdown("""
-            **Təhlükəsizlik tövsiyələri**
+            **🛡️ Təhlükəsizlik tövsiyələri**
             - Şübhəli linklərə klikləmə.
-            - Şifrən və digər məxfi məlumatlarını daxil etmə.
+            - Şifrə və şəxsi məlumatlarını daxil etmə.
             - Göndərənin kimliyini ayrıca yoxla.
             """)
         else:
             st.success(
-                "✅ Email seçilmiş həddə görə phishing kimi "
-                "işarələnmədi."
+                "✅ Email seçilmiş həddə görə phishing "
+                "kimi işarələnmədi."
             )
             st.warning(
-                "Bu nəticə email-in tam təhlükəsiz olduğunu "
-                "sübut etmir."
+                "Bu nəticə email-in tam təhlükəsiz olduğunu sübut etmir."
             )
 
-        with st.expander("🔬 Model qərarını necə verdi?"):
+        with st.expander("🔬 Analiz necə aparıldı?"):
             st.write(
-                "1. Email mətni TF-IDF vasitəsilə rəqəmsal "
+                "1. Email mətni TF-IDF ilə rəqəmsal "
                 "xüsusiyyətlərə çevrildi."
             )
             st.write(
@@ -380,30 +367,27 @@ if scan:
                 f"3. Nəticə {threshold:.0%} qərar həddi ilə müqayisə edildi."
             )
             st.caption(
-                "Göstərilən ehtimal modelin hesablamasıdır; "
-                "təhlükənin dəqiq ölçüsü və ya zəmanəti deyil."
+                "Ehtimal modelin qiymətləndirməsidir; "
+                "tam təhlükəsizlik zəmanəti deyil."
             )
 
-# ---------- FEATURE CARDS ----------
+# FEATURES
 st.markdown("---")
-st.markdown("## ✨ Platform features")
+st.markdown("## ✨ Platformanın imkanları")
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    st.markdown("### 🧠")
-    st.markdown("**AI Analysis**")
+    st.markdown("### 🧠 AI Analysis")
     st.caption("E-poçt mətninin avtomatik təsnifatı.")
 
 with c2:
-    st.markdown("### ⚡")
-    st.markdown("**Fast Detection**")
+    st.markdown("### ⚡ Fast Detection")
     st.caption("Daxil edilən mətnin sürətli analizi.")
 
 with c3:
-    st.markdown("### 🎚️")
-    st.markdown("**Adjustable Threshold**")
-    st.caption("Xəbərdarlıq həddini ehtiyaca görə dəyişmək.")
+    st.markdown("### 🎚️ Flexible Settings")
+    st.caption("Xəbərdarlıq həddini dəyişmək imkanı.")
 
 st.markdown("""
 <div class="footer">
