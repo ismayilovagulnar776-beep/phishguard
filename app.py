@@ -243,6 +243,14 @@ div[data-testid="stCaptionContainer"] {
         letter-spacing: -1px;
     }
 }
+header[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
+div[data-testid="stTextArea"] textarea::placeholder {
+    color: #7F93B3 !important;
+    opacity: 1;
+}
 </style>
 """, unsafe_allow_html=True)
 
